@@ -1,7 +1,6 @@
 import os
 import numpy as np
 import pandas as pd
-import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
 
@@ -23,7 +22,6 @@ SE_VERDE_LIGHT = "#E6F0EE"
 SE_DORADO = "#A57F2C"
 SE_DORADO_LIGHT = "#BC955C"
 SE_SLATE = "#64748B"
-SE_MUTED = "#CBD5E1"
 SE_BG = "#F6F7F9"
 SE_CARD = "#FFFFFF"
 SE_TEXT = "#161A1D"
@@ -329,6 +327,21 @@ st.markdown(
 # ==============================================================================
 # 2. DATA LOADING & EXACT GRAIN DEDUPLICATION
 # ==============================================================================
+MONTH_MAP = {
+    "ENERO": 1, "ENE": 1, "1": 1, "01": 1, "1.0": 1,
+    "FEBRERO": 2, "FEB": 2, "2": 2, "02": 2, "2.0": 2,
+    "MARZO": 3, "MAR": 3, "3": 3, "03": 3, "3.0": 3,
+    "ABRIL": 4, "ABR": 4, "4": 4, "04": 4, "4.0": 4,
+    "MAYO": 5, "MAY": 5, "5": 5, "05": 5, "5.0": 5,
+    "JUNIO": 6, "JUN": 6, "6": 6, "06": 6, "6.0": 6,
+    "JULIO": 7, "JUL": 7, "7": 7, "07": 7, "7.0": 7,
+    "AGOSTO": 8, "AGO": 8, "8": 8, "08": 8, "8.0": 8,
+    "SEPTIEMBRE": 9, "SETIEMBRE": 9, "SEP": 9, "9": 9, "09": 9, "9.0": 9,
+    "OCTUBRE": 10, "OCT": 10, "10": 10, "10.0": 10,
+    "NOVIEMBRE": 11, "NOV": 11, "11": 11, "11.0": 11,
+    "DICIEMBRE": 12, "DIC": 12, "12": 12, "12.0": 12,
+}
+
 SEGMENT_MAP = {
     "SUV": "SUVs",
     "SUVS": "SUVs",
@@ -385,8 +398,12 @@ def load_raiavl_data():
         else:
             df[col] = 0
 
-    df["ANIO"] = pd.to_numeric(df["ANIO"], errors="coerce").astype(int)
-    df["MES"] = pd.to_numeric(df["MES"], errors="coerce").astype(int)
+    df["ANIO"] = pd.to_numeric(df["ANIO"], errors="coerce")
+    df["MES"] = df["MES"].astype(str).str.strip().str.upper().map(MONTH_MAP)
+    df = df.dropna(subset=["ANIO", "MES"]).copy()
+    df["ANIO"] = df["ANIO"].astype(int)
+    df["MES"] = df["MES"].astype(int)
+
     df["MARCA"] = df["MARCA"].fillna("Unknown").astype(str).str.strip()
     df["MODELO"] = df["MODELO"].fillna("Unknown").astype(str).str.strip()
     df["SEG_CLEAN"] = df["SEGMENTO"].apply(normalize_segment) if "SEGMENTO" in df.columns else "Other"
@@ -424,7 +441,7 @@ prev_year = max_year - 1
 # 3. COMPACT SIDEBAR CONTROLS (Clean & Unobtrusive)
 # ==============================================================================
 with st.sidebar:
-    st.markdown(f"### 🇲🇽 Filters · RAIAVL")
+    st.markdown("### 🇲🇽 Filters · RAIAVL")
     ytd_mode = st.toggle(
         f"Match Jan–Oct YTD ({max_year} cutoff)",
         value=True,
@@ -670,489 +687,4 @@ with c1:
         for y in ann_prod["ANIO"]
     ]
     fig_ann = go.Figure(
-        go.Bar(
-            x=ann_prod["ANIO"],
-            y=ann_prod["PRODUCCION"],
-            marker_color=colors,
-            text=[fmt_units(v) for v in ann_prod["PRODUCCION"]],
-            textposition="outside",
-            textfont=dict(size=10, color=SE_TEXT),
-            hovertemplate="<b>%{x}</b><br>Assembly: %{y:,.0f} units<extra></extra>",
-        )
-    )
-    # Shock annotations (COVID-19 & 2026 Tariffs)
-    if year_range[0] <= 2020 <= year_range[1]:
-        fig_ann.add_vrect(
-            x0=2019.5, x1=2021.5, fillcolor="#94A3B8", opacity=0.14, line_width=0,
-            annotation_text="COVID-19 / Chips", annotation_position="top left",
-            annotation_font=dict(size=10, color=SE_SLATE),
-        )
-    if year_range[1] >= 2026:
-        fig_ann.add_vrect(
-            x0=2025.5, x1=2026.5, fillcolor=SE_GUINDA, opacity=0.08, line_width=0,
-            annotation_text="2026 Tariffs", annotation_position="top right",
-            annotation_font=dict(size=10, color=SE_GUINDA),
-        )
-    fig_ann.update_layout(
-        height=330,
-        margin=dict(l=10, r=10, t=28, b=10),
-        plot_bgcolor="white",
-        paper_bgcolor="white",
-        xaxis=dict(dtick=1, showgrid=False, tickfont=dict(size=11)),
-        yaxis=dict(showgrid=True, gridcolor="#F1F5F9", rangemode="tozero", tickformat=".2s"),
-        showlegend=False,
-    )
-    st.plotly_chart(fig_ann, use_container_width=True)
-    # Specific Caveats #1 & #2 placed ONLY where partial-year & ESTATUS apply
-    st.markdown(
-        f"""
-        <div class="chart-caveat" title="ESTATUS: 2005–2023 = Definitive Figures; 2024–Sep 2026 = Revised Figures; Oct 2026 = Preliminary Figures.">
-            ⓘ <strong>Coverage &amp; Vintage:</strong> Matched Jan–Oct YTD comparison (10 mos) to avoid seasonal drop.
-            <code>ESTATUS</code>: 2005–2023 Definitive · 2024–Sep 2026 Revised · Oct 2026 Preliminary.
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-with c2:
-    h_left, h_right = st.columns([1.4, 1.0])
-    with h_left:
-        st.markdown(
-            f"""
-            <p class="chart-title">Assembly by Vehicle Segment</p>
-            <p class="chart-sub">SUVs &amp; Pickups anchor Mexican output</p>
-            """,
-            unsafe_allow_html=True,
-        )
-    with h_right:
-        seg_view = st.radio(
-            "View",
-            ["Units", "% Mix"],
-            horizontal=True,
-            label_visibility="collapsed",
-            key="seg_mix_toggle",
-        )
-
-    seg_hist = (
-        ps[ps["ANIO"].between(year_range[0], year_range[1])]
-        .groupby(["ANIO", "SEG_CLEAN"], as_index=False)["PRODUCCION"]
-        .sum()
-    )
-    top_segs = ["SUVs", "Pickups", "Compacts", "Subcompacts"]
-    seg_hist["SEG_GROUP"] = seg_hist["SEG_CLEAN"].apply(lambda s: s if s in top_segs else "Other")
-    seg_grp = seg_hist.groupby(["ANIO", "SEG_GROUP"], as_index=False)["PRODUCCION"].sum()
-
-    if seg_view == "% Mix":
-        totals = seg_grp.groupby("ANIO")["PRODUCCION"].transform("sum")
-        seg_grp["VAL"] = np.where(totals > 0, seg_grp["PRODUCCION"] / totals * 100.0, 0)
-        y_fmt = ".0f"
-        hover_tmpl = "<b>%{fullData.name}</b> (%{x})<br>Share: %{y:.1f}%<extra></extra>"
-    else:
-        seg_grp["VAL"] = seg_grp["PRODUCCION"]
-        y_fmt = ".2s"
-        hover_tmpl = "<b>%{fullData.name}</b> (%{x})<br>Units: %{y:,.0f}<extra></extra>"
-
-    seg_palette = {
-        "SUVs": SE_GUINDA,
-        "Pickups": SE_VERDE,
-        "Compacts": SE_DORADO,
-        "Subcompacts": "#64748B",
-        "Other": "#CBD5E1",
-    }
-    fig_seg = go.Figure()
-    for seg_name in ["SUVs", "Pickups", "Compacts", "Subcompacts", "Other"]:
-        sub_df = seg_grp[seg_grp["SEG_GROUP"] == seg_name].sort_values("ANIO")
-        if not sub_df.empty:
-            fig_seg.add_trace(
-                go.Bar(
-                    x=sub_df["ANIO"],
-                    y=sub_df["VAL"],
-                    name=seg_name,
-                    marker_color=seg_palette[seg_name],
-                    hovertemplate=hover_tmpl,
-                )
-            )
-    fig_seg.update_layout(
-        barmode="stack",
-        height=330,
-        margin=dict(l=10, r=10, t=28, b=10),
-        plot_bgcolor="white",
-        paper_bgcolor="white",
-        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="left", x=0, font=dict(size=10)),
-        xaxis=dict(dtick=1, showgrid=False, tickfont=dict(size=11)),
-        yaxis=dict(
-            showgrid=True,
-            gridcolor="#F1F5F9",
-            tickformat=y_fmt,
-            ticksuffix="%" if seg_view == "% Mix" else "",
-        ),
-    )
-    st.plotly_chart(fig_seg, use_container_width=True)
-
-
-# ==============================================================================
-# 7. SECTION 02: TRADE DIVERGENCE (U.S. VS. NON-U.S.)
-# ==============================================================================
-st.markdown(
-    f"""
-    <div class="sec-header">
-        <span class="sec-badge" style="background-color:{SE_VERDE};">02</span>
-        <h2 class="sec-title">Trade Divergence: U.S. Exposure vs. Global Shock Absorbers</h2>
-    </div>
-    <div class="sec-caption">Non-U.S. export destinations expanded while U.S.-bound shipments contracted.</div>
-    """,
-    unsafe_allow_html=True,
-)
-
-t1, t2 = st.columns([1.15, 1.0], gap="large")
-
-with t1:
-    st.markdown(
-        f"""
-        <p class="chart-title">Export Trajectory: U.S. vs. Rest of World ({period_tag})</p>
-        <p class="chart-sub">U.S. shipments fell {us_yoy:+.1f}% YoY while non-U.S. markets rose {non_us_yoy:+.1f}%</p>
-        """,
-        unsafe_allow_html=True,
-    )
-    exp_trend = (
-        ex[ex["ANIO"].between(year_range[0], year_range[1])]
-        .groupby(["ANIO", "IS_USA"], as_index=False)["EXPORTACION"]
-        .sum()
-    )
-    exp_trend["DEST"] = np.where(exp_trend["IS_USA"], "United States", "Non-U.S. Markets")
-
-    fig_trade = go.Figure()
-    for dest_label, line_col in [("United States", SE_GUINDA), ("Non-U.S. Markets", SE_VERDE)]:
-        d_sub = exp_trend[exp_trend["DEST"] == dest_label].sort_values("ANIO")
-        fig_trade.add_trace(
-            go.Scatter(
-                x=d_sub["ANIO"],
-                y=d_sub["EXPORTACION"],
-                mode="lines+markers+text",
-                name=dest_label,
-                line=dict(color=line_col, width=3),
-                marker=dict(size=6, color=line_col),
-                text=[fmt_units(v) if y in (year_range[0], max_year) else "" for y, v in zip(d_sub["ANIO"], d_sub["EXPORTACION"])],
-                textposition="top center",
-                textfont=dict(size=10, color=line_col),
-                hovertemplate=f"<b>{dest_label}</b> (%{{x}})<br>Exports: %{{y:,.0f}} units<extra></extra>",
-            )
-        )
-    fig_trade.update_layout(
-        height=320,
-        margin=dict(l=10, r=20, t=28, b=10),
-        plot_bgcolor="white",
-        paper_bgcolor="white",
-        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="left", x=0, font=dict(size=11)),
-        xaxis=dict(dtick=1, showgrid=False, tickfont=dict(size=11)),
-        yaxis=dict(showgrid=True, gridcolor="#F1F5F9", rangemode="tozero", tickformat=".2s"),
-    )
-    st.plotly_chart(fig_trade, use_container_width=True)
-
-with t2:
-    st.markdown(
-        f"""
-        <p class="chart-title">Top Non-U.S. Destinations ({period_tag})</p>
-        <p class="chart-sub">Canada, Germany &amp; Latin America buffer North American tariff friction</p>
-        """,
-        unsafe_allow_html=True,
-    )
-    non_us_curr_df = (
-        ex[(ex["ANIO"] == max_year) & (~ex["IS_USA"])]
-        .groupby("PAIS_DESTINO", as_index=False)["EXPORTACION"]
-        .sum()
-    )
-    non_us_prev_df = (
-        ex[(ex["ANIO"] == prev_year) & (~ex["IS_USA"])]
-        .groupby("PAIS_DESTINO", as_index=False)["EXPORTACION"]
-        .sum()
-        .rename(columns={"EXPORTACION": "PREV_EXP"})
-    )
-    top_dest = (
-        non_us_curr_df.merge(non_us_prev_df, on="PAIS_DESTINO", how="left")
-        .fillna(0)
-        .sort_values("EXPORTACION", ascending=False)
-        .head(7)
-        .sort_values("EXPORTACION", ascending=True)
-    )
-    top_dest["YOY"] = np.where(
-        top_dest["PREV_EXP"] > 0,
-        (top_dest["EXPORTACION"] - top_dest["PREV_EXP"]) / top_dest["PREV_EXP"] * 100.0,
-        0.0,
-    )
-    top_dest["LABEL"] = [
-        f"{fmt_units(u)} ({y:+.1f}%)" for u, y in zip(top_dest["EXPORTACION"], top_dest["YOY"])
-    ]
-    fig_dest = go.Figure(
-        go.Bar(
-            x=top_dest["EXPORTACION"],
-            y=top_dest["PAIS_DESTINO"],
-            orientation="h",
-            marker_color=SE_VERDE,
-            text=top_dest["LABEL"],
-            textposition="outside",
-            textfont=dict(size=10, color=SE_TEXT),
-            hovertemplate="<b>%{y}</b><br>Exports: %{x:,.0f} units<extra></extra>",
-        )
-    )
-    fig_dest.update_layout(
-        height=320,
-        margin=dict(l=10, r=65, t=28, b=10),
-        plot_bgcolor="white",
-        paper_bgcolor="white",
-        xaxis=dict(showgrid=True, gridcolor="#F1F5F9", rangemode="tozero", tickformat=".2s"),
-        yaxis=dict(showgrid=False, tickfont=dict(size=11)),
-    )
-    st.plotly_chart(fig_dest, use_container_width=True)
-
-
-# ==============================================================================
-# 8. SECTION 03: TWO-SPEED SEGMENT SPLIT & DOMESTIC MARKET SCOPE
-# ==============================================================================
-st.markdown(
-    f"""
-    <div class="sec-header">
-        <span class="sec-badge" style="background-color:{SE_DORADO};">03</span>
-        <h2 class="sec-title">Two-Speed Segment Split &amp; Domestic Shield</h2>
-    </div>
-    <div class="sec-caption">Export-dependent SUVs vs. domestically absorbed Subcompacts and Compacts.</div>
-    """,
-    unsafe_allow_html=True,
-)
-
-s1, s2 = st.columns([1.05, 1.05], gap="large")
-
-with s1:
-    st.markdown(
-        f"""
-        <p class="chart-title">Export vs. Domestic Sales Orientation by Segment ({max_year})</p>
-        <p class="chart-sub">Share of total destination volume shipped abroad vs. sold in Mexico</p>
-        """,
-        unsafe_allow_html=True,
-    )
-    seg_exp = (
-        ex[ex["ANIO"] == max_year]
-        .groupby("SEG_CLEAN", as_index=False)["EXPORTACION"]
-        .sum()
-    )
-    seg_dom = (
-        ps[ps["ANIO"] == max_year]
-        .groupby("SEG_CLEAN", as_index=False)["VENTAS"]
-        .sum()
-    )
-    seg_split = seg_exp.merge(seg_dom, on="SEG_CLEAN", how="outer").fillna(0)
-    seg_split["TOTAL"] = seg_split["EXPORTACION"] + seg_split["VENTAS"]
-    seg_split = seg_split[seg_split["TOTAL"] > 0].copy()
-    seg_split["EXP_PCT"] = seg_split["EXPORTACION"] / seg_split["TOTAL"] * 100.0
-    seg_split["DOM_PCT"] = seg_split["VENTAS"] / seg_split["TOTAL"] * 100.0
-    seg_split = seg_split.sort_values("EXP_PCT", ascending=True)
-
-    fig_split = go.Figure()
-    fig_split.add_trace(
-        go.Bar(
-            y=seg_split["SEG_CLEAN"],
-            x=seg_split["EXP_PCT"],
-            name="Exported Abroad",
-            orientation="h",
-            marker_color=SE_GUINDA,
-            text=[f"{v:.1f}%" if v >= 12 else "" for v in seg_split["EXP_PCT"]],
-            textposition="inside",
-            textfont=dict(color="white", size=10),
-            hovertemplate="<b>%{y}</b><br>Exported: %{x:.1f}%<extra></extra>",
-        )
-    )
-    fig_split.add_trace(
-        go.Bar(
-            y=seg_split["SEG_CLEAN"],
-            x=seg_split["DOM_PCT"],
-            name="Domestic Retail (Mexico)",
-            orientation="h",
-            marker_color=SE_VERDE,
-            text=[f"{v:.1f}%" if v >= 12 else "" for v in seg_split["DOM_PCT"]],
-            textposition="inside",
-            textfont=dict(color="white", size=10),
-            hovertemplate="<b>%{y}</b><br>Domestic Sales: %{x:.1f}%<extra></extra>",
-        )
-    )
-    fig_split.update_layout(
-        barmode="stack",
-        height=320,
-        margin=dict(l=10, r=10, t=28, b=10),
-        plot_bgcolor="white",
-        paper_bgcolor="white",
-        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="left", x=0, font=dict(size=10)),
-        xaxis=dict(range=[0, 100], ticksuffix="%", showgrid=False),
-        yaxis=dict(showgrid=False, tickfont=dict(size=11)),
-    )
-    st.plotly_chart(fig_split, use_container_width=True)
-    # Specific Caveat #4 placed ONLY on the segment export ratio chart
-    st.markdown(
-        f"""
-        <div class="chart-caveat" title="GM Silverado 2500 / GMC Sierra and Stellantis RAM 2500 record export shipments in 2025–2026 from inventory/model-code splits against zero new production rows.">
-            ⓘ <strong>Heavy-Duty Pickup Lag:</strong> GM Silverado 2500 / GMC Sierra and Stellantis RAM 2500 record
-            2025–2026 export shipments from inventory/model-code splits against zero new production rows.
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-with s2:
-    st.markdown(
-        f"""
-        <p class="chart-title">Domestic Retail Sales by Automaker — Top 10 ({period_tag})</p>
-        <p class="chart-sub">AMIA-affiliated registry leaders anchoring internal demand</p>
-        """,
-        unsafe_allow_html=True,
-    )
-    brand_dom = (
-        ps[ps["ANIO"] == max_year]
-        .groupby("MARCA", as_index=False)["VENTAS"]
-        .sum()
-        .sort_values("VENTAS", ascending=False)
-        .head(10)
-        .sort_values("VENTAS", ascending=True)
-    )
-    fig_brand = go.Figure(
-        go.Bar(
-            x=brand_dom["VENTAS"],
-            y=brand_dom["MARCA"],
-            orientation="h",
-            marker_color=SE_DORADO,
-            text=[fmt_units(v) for v in brand_dom["VENTAS"]],
-            textposition="outside",
-            textfont=dict(size=10, color=SE_TEXT),
-            hovertemplate="<b>%{y}</b><br>Domestic Sales: %{x:,.0f} units<extra></extra>",
-        )
-    )
-    fig_brand.update_layout(
-        height=320,
-        margin=dict(l=10, r=45, t=28, b=10),
-        plot_bgcolor="white",
-        paper_bgcolor="white",
-        xaxis=dict(showgrid=True, gridcolor="#F1F5F9", rangemode="tozero", tickformat=".2s"),
-        yaxis=dict(showgrid=False, tickfont=dict(size=11)),
-    )
-    st.plotly_chart(fig_brand, use_container_width=True)
-    # Specific Caveat #3 placed ONLY on the brand/domestic scope chart
-    st.markdown(
-        f"""
-        <div class="chart-caveat" title="RAIAVL inner-joins Production, Exports, and Retail Sales of AMIA-affiliated automakers.">
-            ⓘ <strong>Panel Scope:</strong> AMIA-affiliated RAIAVL registry; non-reporting Chinese brands
-            (<strong>BYD, MG, Chirey, Omoda, Geely</strong>) and import-only brands without Mexican plants are excluded.
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-
-# ==============================================================================
-# 9. SECTION 04: POLICY SIMULATOR & STRATEGIC ACTIONS (Clean Cards)
-# ==============================================================================
-st.markdown(
-    f"""
-    <div class="sec-header">
-        <span class="sec-badge">04</span>
-        <h2 class="sec-title">Policy Levers &amp; Tariff Stress-Test</h2>
-    </div>
-    <div class="sec-caption">Adjust U.S. tariff contraction and non-U.S. market absorption to evaluate net assembly impact.</div>
-    """,
-    unsafe_allow_html=True,
-)
-
-sim_c1, sim_c2, sim_c3 = st.columns([1.0, 1.0, 1.2], gap="medium")
-with sim_c1:
-    us_shock_pct = st.slider("Additional U.S. Tariff Shock (%)", min_value=-25, max_value=10, value=-8, step=1)
-with sim_c2:
-    non_us_boost_pct = st.slider("Non-U.S. Diversification Gain (%)", min_value=0, max_value=30, value=12, step=1)
-with sim_c3:
-    delta_us_units = us_curr * (us_shock_pct / 100.0)
-    delta_non_us_units = non_us_curr * (non_us_boost_pct / 100.0)
-    net_impact_units = delta_us_units + delta_non_us_units
-    net_cls = "pill-pos" if net_impact_units >= 0 else "pill-neg"
-    st.markdown(
-        f"""
-        <div class="kpi-card verde" style="padding: 0.7rem 1rem;">
-            <div class="kpi-top">
-                <span>Simulated Net Export Delta</span>
-                <span class="kpi-info-icon">ⓘ</span>
-            </div>
-            <div class="kpi-number" style="font-size:1.5rem; margin:0.2rem 0;">{net_impact_units:+,.0f} units</div>
-            <span class="kpi-pill {net_cls}">U.S. {delta_us_units:+,.0f} | Non-U.S. {delta_non_us_units:+,.0f}</span>
-            <div class="kpi-tooltip">
-                Applies <b>{us_shock_pct:+d}%</b> to current U.S. volume ({fmt_units(us_curr)}) and
-                <b>{non_us_boost_pct:+d}%</b> to non-U.S. exports ({fmt_units(non_us_curr)}).
-            </div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-st.write("")
-
-r1, r2, r3 = st.columns(3, gap="medium")
-
-with r1:
-    st.markdown(
-        f"""
-        <div class="rec-card" style="border-top-color:{SE_GUINDA};">
-            <span class="rec-tag guinda">01 · USMCA Shield</span>
-            <div class="rec-title">Regional Content Compliance</div>
-            <div class="rec-stats">
-                <div class="rec-stat-box">
-                    <div class="rec-stat-num">{fmt_units(us_curr)}</div>
-                    <div class="rec-stat-lbl">U.S.-bound units</div>
-                </div>
-                <div class="rec-stat-box">
-                    <div class="rec-stat-num">{suv_exp_share:.1f}%</div>
-                    <div class="rec-stat-lbl">SUV export share</div>
-                </div>
-            </div>
-            <div class="rec-action"><strong>Action:</strong> Accelerate Tier-1/Tier-2 North American powertrain &amp; battery localization in SUV plants to preserve zero-tariff USMCA qualification.</div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-with r2:
-    st.markdown(
-        f"""
-        <div class="rec-card">
-            <span class="rec-tag">02 · Trade Diversification</span>
-            <div class="rec-title">Expand LATAM &amp; EU Corridors</div>
-            <div class="rec-stats">
-                <div class="rec-stat-box">
-                    <div class="rec-stat-num">{fmt_units(non_us_curr)}</div>
-                    <div class="rec-stat-lbl">Non-U.S. volume</div>
-                </div>
-                <div class="rec-stat-box">
-                    <div class="rec-stat-num">{non_us_yoy:+.1f}%</div>
-                    <div class="rec-stat-lbl">YoY growth pace</div>
-                </div>
-            </div>
-            <div class="rec-action"><strong>Action:</strong> Leverage ACE-55 (Brazil/Mercosur) and EU-Mexico trade agreements to absorb excess compact &amp; SUV assembly capacity.</div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-with r3:
-    st.markdown(
-        f"""
-        <div class="rec-card" style="border-top-color:{SE_DORADO};">
-            <span class="rec-tag dorado">03 · Domestic Anchor</span>
-            <div class="rec-title">Strengthen Local Fleet Renewal</div>
-            <div class="rec-stats">
-                <div class="rec-stat-box">
-                    <div class="rec-stat-num">{sub_dom_share:.1f}%</div>
-                    <div class="rec-stat-lbl">Subcompacts sold locally</div>
-                </div>
-                <div class="rec-stat-box">
-                    <div class="rec-stat-num">{fmt_units(ps.loc[ps["ANIO"] == max_year, "VENTAS"].sum())}</div>
-                    <div class="rec-stat-lbl">{period_tag} retail sales</div>
-                </div>
-            </div>
-            <div class="rec-action"><strong>Action:</strong> Target NAFIN/Bancomext financing incentives toward domestically assembled subcompacts and light commercial pickups.</div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
+        go.Bar
