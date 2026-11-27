@@ -688,3 +688,4 @@ with c1:
     ]
     fig_ann = go.Figure(
         go.Bar
+    )
