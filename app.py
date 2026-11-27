@@ -681,6 +681,7 @@ with c1:
         for y in ann_prod["ANIO"]
     ]
     fig_ann = go.Figure(
+<<<<<<< HEAD
         data=[
             go.Bar(
                 x=ann_prod["ANIO"],
@@ -1172,3 +1173,7 @@ with r3:
         """,
         unsafe_allow_html=True,
     )
+=======
+        go.Bar
+    )
+>>>>>>> e8d893d90fcbd8b2fbf0ea45c300ec9f4ad60b22
