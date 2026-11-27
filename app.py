@@ -1,7 +1,6 @@
 import os
 import numpy as np
 import pandas as pd
-import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
 
@@ -23,7 +22,6 @@ SE_VERDE_LIGHT = "#E6F0EE"
 SE_DORADO = "#A57F2C"
 SE_DORADO_LIGHT = "#BC955C"
 SE_SLATE = "#64748B"
-SE_MUTED = "#CBD5E1"
 SE_BG = "#F6F7F9"
 SE_CARD = "#FFFFFF"
 SE_TEXT = "#161A1D"
@@ -31,7 +29,6 @@ SE_TEXT = "#161A1D"
 st.markdown(
     f"""
     <style>
-    /* Global Canvas */
     .stApp {{
         background-color: {SE_BG};
         color: {SE_TEXT};
@@ -229,7 +226,7 @@ st.markdown(
         opacity: 1;
     }}
 
-    /* Chart Card Wrapper & Chart-Specific Micro-Footnote */
+    /* Chart Headers & Chart-Specific Micro-Footnote */
     .chart-header-row {{
         display: flex;
         justify-content: space-between;
@@ -258,7 +255,7 @@ st.markdown(
         margin-bottom: 0.6rem;
     }}
 
-    /* Compact Recommendation Cards (Bottom Section) */
+    /* Compact Recommendation Cards */
     .rec-card {{
         background: {SE_CARD};
         border: 1px solid #E2E8F0;
@@ -329,6 +326,21 @@ st.markdown(
 # ==============================================================================
 # 2. DATA LOADING & EXACT GRAIN DEDUPLICATION
 # ==============================================================================
+MONTH_MAP = {
+    "ENERO": 1, "ENE": 1, "1": 1, "01": 1, "1.0": 1,
+    "FEBRERO": 2, "FEB": 2, "2": 2, "02": 2, "2.0": 2,
+    "MARZO": 3, "MAR": 3, "3": 3, "03": 3, "3.0": 3,
+    "ABRIL": 4, "ABR": 4, "4": 4, "04": 4, "4.0": 4,
+    "MAYO": 5, "MAY": 5, "5": 5, "05": 5, "5.0": 5,
+    "JUNIO": 6, "JUN": 6, "6": 6, "06": 6, "6.0": 6,
+    "JULIO": 7, "JUL": 7, "7": 7, "07": 7, "7.0": 7,
+    "AGOSTO": 8, "AGO": 8, "8": 8, "08": 8, "8.0": 8,
+    "SEPTIEMBRE": 9, "SETIEMBRE": 9, "SEP": 9, "9": 9, "09": 9, "9.0": 9,
+    "OCTUBRE": 10, "OCT": 10, "10": 10, "10.0": 10,
+    "NOVIEMBRE": 11, "NOV": 11, "11": 11, "11.0": 11,
+    "DICIEMBRE": 12, "DIC": 12, "12": 12, "12.0": 12,
+}
+
 SEGMENT_MAP = {
     "SUV": "SUVs",
     "SUVS": "SUVs",
@@ -385,16 +397,18 @@ def load_raiavl_data():
         else:
             df[col] = 0
 
-    df["ANIO"] = pd.to_numeric(df["ANIO"], errors="coerce").astype(int)
-    df["MES"] = pd.to_numeric(df["MES"], errors="coerce").astype(int)
+    df["ANIO"] = pd.to_numeric(df["ANIO"], errors="coerce")
+    df["MES"] = df["MES"].astype(str).str.strip().str.upper().map(MONTH_MAP)
+    df = df.dropna(subset=["ANIO", "MES"]).copy()
+    df["ANIO"] = df["ANIO"].astype(int)
+    df["MES"] = df["MES"].astype(int)
+
     df["MARCA"] = df["MARCA"].fillna("Unknown").astype(str).str.strip()
     df["MODELO"] = df["MODELO"].fillna("Unknown").astype(str).str.strip()
     df["SEG_CLEAN"] = df["SEGMENTO"].apply(normalize_segment) if "SEGMENTO" in df.columns else "Other"
     df["PAIS_DESTINO"] = df["PAIS_DESTINO"].fillna("Unreported").astype(str).str.strip()
     df["IS_USA"] = df["PAIS_DESTINO"].apply(is_usa)
 
-    # Exact grain deduplication: Production & Retail Sales are monthly-model level,
-    # whereas Exports are disaggregated by PAIS_DESTINO.
     grain_cols = ["ANIO", "MES", "MARCA", "MODELO", "SEG_CLEAN"]
 
     prod_sales = (
@@ -421,10 +435,10 @@ prev_year = max_year - 1
 
 
 # ==============================================================================
-# 3. COMPACT SIDEBAR CONTROLS (Clean & Unobtrusive)
+# 3. COMPACT SIDEBAR CONTROLS
 # ==============================================================================
 with st.sidebar:
-    st.markdown(f"### 🇲🇽 Filters · RAIAVL")
+    st.markdown("### 🇲🇽 Filters · RAIAVL")
     ytd_mode = st.toggle(
         f"Match Jan–Oct YTD ({max_year} cutoff)",
         value=True,
@@ -443,7 +457,6 @@ with st.sidebar:
         value=(2015, max_year),
     )
 
-# Apply filters
 ps = prod_sales_df.copy()
 ex = exports_df.copy()
 
@@ -461,7 +474,7 @@ if sel_segments:
 
 
 # ==============================================================================
-# 4. CORE METRICS COMPUTATION (Dynamic + Exact YTD)
+# 4. CORE METRICS COMPUTATION
 # ==============================================================================
 def fmt_units(val: float) -> str:
     if abs(val) >= 1_000_000:
@@ -490,7 +503,6 @@ non_us_curr = ex.loc[(ex["ANIO"] == max_year) & (~ex["IS_USA"]), "EXPORTACION"].
 non_us_prev = ex.loc[(ex["ANIO"] == prev_year) & (~ex["IS_USA"]), "EXPORTACION"].sum()
 non_us_yoy = pct_delta(non_us_curr, non_us_prev)
 
-# Two-speed segment split
 suv_exp_curr = ex.loc[(ex["ANIO"] == max_year) & (ex["SEG_CLEAN"] == "SUVs"), "EXPORTACION"].sum()
 suv_exp_share = min((suv_exp_curr / suv_curr * 100.0), 99.9) if suv_curr > 0 else 0.0
 
@@ -506,7 +518,7 @@ period_tag = f"Jan–Oct {max_year} YTD" if ytd_mode else f"Full Year {max_year}
 
 
 # ==============================================================================
-# 5. HERO HEADER (Zero "Decision Brief" Wall of Text)
+# 5. HERO HEADER
 # ==============================================================================
 st.markdown(
     f"""
@@ -543,7 +555,7 @@ st.markdown(
 
 
 # ==============================================================================
-# 6. KEY NUMBERS WITH HOVER POP-UPS (Replaces Long Insight Text Cards)
+# 6. SECTION 01: KEY NUMBERS WITH HOVER POP-UPS & ASSEMBLY CHARTS
 # ==============================================================================
 st.markdown(
     f"""
@@ -644,7 +656,6 @@ with k4:
 
 st.write("")
 
-# Row 1 Charts: Assembly Trajectory & Segment Mix
 c1, c2 = st.columns([1.15, 1.0], gap="large")
 
 with c1:
@@ -670,17 +681,18 @@ with c1:
         for y in ann_prod["ANIO"]
     ]
     fig_ann = go.Figure(
-        go.Bar(
-            x=ann_prod["ANIO"],
-            y=ann_prod["PRODUCCION"],
-            marker_color=colors,
-            text=[fmt_units(v) for v in ann_prod["PRODUCCION"]],
-            textposition="outside",
-            textfont=dict(size=10, color=SE_TEXT),
-            hovertemplate="<b>%{x}</b><br>Assembly: %{y:,.0f} units<extra></extra>",
-        )
+        data=[
+            go.Bar(
+                x=ann_prod["ANIO"],
+                y=ann_prod["PRODUCCION"],
+                marker_color=colors,
+                text=[fmt_units(v) for v in ann_prod["PRODUCCION"]],
+                textposition="outside",
+                textfont=dict(size=10, color=SE_TEXT),
+                hovertemplate="<b>%{x}</b><br>Assembly: %{y:,.0f} units<extra></extra>",
+            )
+        ]
     )
-    # Shock annotations (COVID-19 & 2026 Tariffs)
     if year_range[0] <= 2020 <= year_range[1]:
         fig_ann.add_vrect(
             x0=2019.5, x1=2021.5, fillcolor="#94A3B8", opacity=0.14, line_width=0,
@@ -703,7 +715,6 @@ with c1:
         showlegend=False,
     )
     st.plotly_chart(fig_ann, use_container_width=True)
-    # Specific Caveats #1 & #2 placed ONLY where partial-year & ESTATUS apply
     st.markdown(
         f"""
         <div class="chart-caveat" title="ESTATUS: 2005–2023 = Definitive Figures; 2024–Sep 2026 = Revised Figures; Oct 2026 = Preliminary Figures.">
@@ -832,7 +843,10 @@ with t1:
                 name=dest_label,
                 line=dict(color=line_col, width=3),
                 marker=dict(size=6, color=line_col),
-                text=[fmt_units(v) if y in (year_range[0], max_year) else "" for y, v in zip(d_sub["ANIO"], d_sub["EXPORTACION"])],
+                text=[
+                    fmt_units(v) if y in (year_range[0], max_year) else ""
+                    for y, v in zip(d_sub["ANIO"], d_sub["EXPORTACION"])
+                ],
                 textposition="top center",
                 textfont=dict(size=10, color=line_col),
                 hovertemplate=f"<b>{dest_label}</b> (%{{x}})<br>Exports: %{{y:,.0f}} units<extra></extra>",
@@ -884,16 +898,18 @@ with t2:
         f"{fmt_units(u)} ({y:+.1f}%)" for u, y in zip(top_dest["EXPORTACION"], top_dest["YOY"])
     ]
     fig_dest = go.Figure(
-        go.Bar(
-            x=top_dest["EXPORTACION"],
-            y=top_dest["PAIS_DESTINO"],
-            orientation="h",
-            marker_color=SE_VERDE,
-            text=top_dest["LABEL"],
-            textposition="outside",
-            textfont=dict(size=10, color=SE_TEXT),
-            hovertemplate="<b>%{y}</b><br>Exports: %{x:,.0f} units<extra></extra>",
-        )
+        data=[
+            go.Bar(
+                x=top_dest["EXPORTACION"],
+                y=top_dest["PAIS_DESTINO"],
+                orientation="h",
+                marker_color=SE_VERDE,
+                text=top_dest["LABEL"],
+                textposition="outside",
+                textfont=dict(size=10, color=SE_TEXT),
+                hovertemplate="<b>%{y}</b><br>Exports: %{x:,.0f} units<extra></extra>",
+            )
+        ]
     )
     fig_dest.update_layout(
         height=320,
@@ -985,7 +1001,6 @@ with s1:
         yaxis=dict(showgrid=False, tickfont=dict(size=11)),
     )
     st.plotly_chart(fig_split, use_container_width=True)
-    # Specific Caveat #4 placed ONLY on the segment export ratio chart
     st.markdown(
         f"""
         <div class="chart-caveat" title="GM Silverado 2500 / GMC Sierra and Stellantis RAM 2500 record export shipments in 2025–2026 from inventory/model-code splits against zero new production rows.">
@@ -1013,16 +1028,18 @@ with s2:
         .sort_values("VENTAS", ascending=True)
     )
     fig_brand = go.Figure(
-        go.Bar(
-            x=brand_dom["VENTAS"],
-            y=brand_dom["MARCA"],
-            orientation="h",
-            marker_color=SE_DORADO,
-            text=[fmt_units(v) for v in brand_dom["VENTAS"]],
-            textposition="outside",
-            textfont=dict(size=10, color=SE_TEXT),
-            hovertemplate="<b>%{y}</b><br>Domestic Sales: %{x:,.0f} units<extra></extra>",
-        )
+        data=[
+            go.Bar(
+                x=brand_dom["VENTAS"],
+                y=brand_dom["MARCA"],
+                orientation="h",
+                marker_color=SE_DORADO,
+                text=[fmt_units(v) for v in brand_dom["VENTAS"]],
+                textposition="outside",
+                textfont=dict(size=10, color=SE_TEXT),
+                hovertemplate="<b>%{y}</b><br>Domestic Sales: %{x:,.0f} units<extra></extra>",
+            )
+        ]
     )
     fig_brand.update_layout(
         height=320,
@@ -1033,7 +1050,6 @@ with s2:
         yaxis=dict(showgrid=False, tickfont=dict(size=11)),
     )
     st.plotly_chart(fig_brand, use_container_width=True)
-    # Specific Caveat #3 placed ONLY on the brand/domestic scope chart
     st.markdown(
         f"""
         <div class="chart-caveat" title="RAIAVL inner-joins Production, Exports, and Retail Sales of AMIA-affiliated automakers.">
@@ -1046,7 +1062,7 @@ with s2:
 
 
 # ==============================================================================
-# 9. SECTION 04: POLICY SIMULATOR & STRATEGIC ACTIONS (Clean Cards)
+# 9. SECTION 04: POLICY SIMULATOR & STRATEGIC ACTIONS
 # ==============================================================================
 st.markdown(
     f"""
