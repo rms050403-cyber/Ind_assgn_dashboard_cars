@@ -5,7 +5,7 @@ import plotly.graph_objects as go
 import streamlit as st
 
 # ==============================================================================
-# 1. PAGE CONFIG & HIGH-CONTRAST INSTITUTIONAL PALETTE
+# 1. PAGE CONFIG & SECRETARÍA DE ECONOMÍA INSTITUTIONAL PALETTE (gob.mx/se)
 # ==============================================================================
 st.set_page_config(
     page_title="SE · Mexican Light-Vehicle Industry (RAIAVL)",
@@ -14,14 +14,14 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
-# High-contrast accessible palette (distinct luminance & hue separation)
-SE_GUINDA = "#A61C3C"       # Vivid Crimson-Guinda (Tariff exposure / Contraction / U.S.)
-SE_GUINDA_DARK = "#5C1024"  # Hero gradient anchor
-SE_TEAL = "#0D9488"         # Bright Turquoise-Teal (Shock absorbers / Expansion / Domestic)
-SE_TEAL_DARK = "#0F766E"    # Active tab & hero gradient anchor
-SE_TEAL_LIGHT = "#CCFBF1"
-SE_AMBER = "#D97706"        # Warm Gold-Amber (Benchmarks / Totals / Compacts)
-SE_BLUE = "#3B82F6"         # Crisp Blue (Subcompacts / Secondary)
+# Official Gob.mx / Secretaría de Economía tones tuned for clear hue & value separation
+SE_GUINDA = "#691C32"       # Official Gob.mx Guinda (Tariff exposure / Contraction / U.S.)
+SE_GUINDA_DARK = "#4A0E20"  # Deep Guinda for hero gradient anchor
+SE_VERDE = "#1B7A63"        # Institutional Emerald-Verde (distinct from Guinda in hue & lightness)
+SE_VERDE_DARK = "#104C3E"   # Deep Verde for hero gradient & active tab pill
+SE_VERDE_LIGHT = "#E6F3F0"
+SE_DORADO = "#B38A36"       # Official Gob.mx Dorado (Benchmarks / Totals / Compacts)
+SE_OXFORD = "#3B5978"       # Institutional Steel-Oxford (Subcompacts / Secondary series)
 SE_SLATE = "#64748B"
 SE_BG = "#F6F7F9"
 SE_CARD = "#FFFFFF"
@@ -41,10 +41,10 @@ st.markdown(
         max-width: 1340px;
     }}
 
-    /* Institutional Hero Banner */
+    /* Institutional Hero Banner (Secretaría de Economía) */
     .se-hero {{
-        background: linear-gradient(125deg, {SE_GUINDA_DARK} 0%, {SE_GUINDA} 52%, {SE_TEAL_DARK} 100%);
-        border-bottom: 4px solid #F59E0B;
+        background: linear-gradient(125deg, {SE_GUINDA_DARK} 0%, {SE_GUINDA} 52%, {SE_VERDE_DARK} 100%);
+        border-bottom: 4px solid {SE_DORADO};
         border-radius: 16px;
         padding: 1.5rem 1.85rem;
         color: #FFFFFF;
@@ -56,7 +56,7 @@ st.markdown(
         font-weight: 700;
         letter-spacing: 0.12em;
         text-transform: uppercase;
-        color: #FDE68A;
+        color: #EBD8B0;
         margin-bottom: 0.3rem;
     }}
     .se-title {{
@@ -77,8 +77,8 @@ st.markdown(
         gap: 0.9rem;
     }}
     .hero-kpi-box {{
-        background: rgba(255, 255, 255, 0.12);
-        border: 1px solid rgba(255, 255, 255, 0.24);
+        background: rgba(255, 255, 255, 0.11);
+        border: 1px solid rgba(255, 255, 255, 0.22);
         border-radius: 12px;
         padding: 0.75rem 0.95rem;
         backdrop-filter: blur(4px);
@@ -87,7 +87,7 @@ st.markdown(
         font-size: 0.70rem;
         text-transform: uppercase;
         letter-spacing: 0.06em;
-        color: #FDE68A;
+        color: #EBD8B0;
         font-weight: 700;
     }}
     .hero-kpi-val {{
@@ -103,7 +103,7 @@ st.markdown(
         margin-top: 0.1rem;
     }}
 
-    /* Smooth Pill Navigation Tabs (Removes sharp default highlight rectangle) */
+    /* Smooth Pill Navigation Tabs */
     .stTabs [data-baseweb="tab-list"] {{
         gap: 0.5rem;
         background-color: #FFFFFF;
@@ -133,9 +133,9 @@ st.markdown(
         color: {SE_TEXT};
     }}
     .stTabs [aria-selected="true"] {{
-        background: linear-gradient(135deg, {SE_TEAL} 0%, {SE_TEAL_DARK} 100%) !important;
+        background: linear-gradient(135deg, {SE_VERDE} 0%, {SE_VERDE_DARK} 100%) !important;
         color: #FFFFFF !important;
-        box-shadow: 0 3px 10px rgba(13, 148, 136, 0.28);
+        box-shadow: 0 3px 10px rgba(27, 122, 99, 0.26);
     }}
 
     /* Section Headers */
@@ -146,7 +146,7 @@ st.markdown(
         margin: 0.35rem 0 0.12rem 0;
     }}
     .sec-badge {{
-        background-color: {SE_TEAL};
+        background-color: {SE_GUINDA};
         color: #FFFFFF;
         font-size: 0.73rem;
         font-weight: 800;
@@ -171,7 +171,7 @@ st.markdown(
         position: relative;
         background: {SE_CARD};
         border: 1px solid #E2E8F0;
-        border-top: 3px solid {SE_TEAL};
+        border-top: 3px solid {SE_VERDE};
         border-radius: 12px;
         padding: 0.9rem 1.05rem;
         box-shadow: 0 2px 6px rgba(15, 23, 42, 0.03);
@@ -199,8 +199,8 @@ st.markdown(
         padding: 0.16rem 0.52rem;
         border-radius: 999px;
     }}
-    .pill-neg {{ background: #FFE4E6; color: {SE_GUINDA}; }}
-    .pill-pos {{ background: {SE_TEAL_LIGHT}; color: {SE_TEAL_DARK}; }}
+    .pill-neg {{ background: #F9EBEF; color: {SE_GUINDA}; }}
+    .pill-pos {{ background: {SE_VERDE_LIGHT}; color: {SE_VERDE_DARK}; }}
 
     /* Chart Titles & Chart-Specific Micro-Caveats */
     .chart-title {{
@@ -219,7 +219,7 @@ st.markdown(
         color: {SE_SLATE};
         background: #FFFFFF;
         border: 1px solid #E2E8F0;
-        border-left: 3px solid {SE_AMBER};
+        border-left: 3px solid {SE_DORADO};
         padding: 0.38rem 0.68rem;
         border-radius: 0 8px 8px 0;
         margin-top: -0.25rem;
@@ -230,7 +230,7 @@ st.markdown(
     .rec-card {{
         background: {SE_CARD};
         border: 1px solid #E2E8F0;
-        border-top: 3px solid {SE_TEAL};
+        border-top: 3px solid {SE_VERDE};
         border-radius: 12px;
         padding: 1rem 1.1rem;
         height: 100%;
@@ -243,12 +243,12 @@ st.markdown(
         letter-spacing: 0.06em;
         padding: 0.16rem 0.5rem;
         border-radius: 6px;
-        background: {SE_TEAL_LIGHT};
-        color: {SE_TEAL_DARK};
+        background: {SE_VERDE_LIGHT};
+        color: {SE_VERDE_DARK};
         margin-bottom: 0.42rem;
     }}
-    .rec-tag.guinda {{ background: #FFE4E6; color: {SE_GUINDA}; }}
-    .rec-tag.amber {{ background: #FEF3C7; color: #B45309; }}
+    .rec-tag.guinda {{ background: #F9EBEF; color: {SE_GUINDA}; }}
+    .rec-tag.dorado {{ background: #FBF5E8; color: #8C6820; }}
     .rec-title {{
         font-size: 1.00rem;
         font-weight: 800;
@@ -311,33 +311,34 @@ MONTH_SHORT = {
     7: "Jul", 8: "Aug", 9: "Sep", 10: "Oct", 11: "Nov", 12: "Dec",
 }
 
-SEGMENT_MAP = {
-    "SUV": "SUVs",
-    "SUVS": "SUVs",
-    "CAMIONES LIGEROS": "SUVs",
-    "PICK UP": "Pickups",
-    "PICK UPS": "Pickups",
-    "PICKUPS": "Pickups",
-    "PICK-UP": "Pickups",
-    "SUBCOMPACTO": "Subcompacts",
-    "SUBCOMPACTOS": "Subcompacts",
-    "COMPACTO": "Compacts",
-    "COMPACTOS": "Compacts",
-    "MINIVAN": "Minivans",
-    "MINIVANS": "Minivans",
-    "DE LUJO": "Luxury",
-    "LUJO": "Luxury",
-    "DEPORTIVO": "Sports",
-    "DEPORTIVOS": "Sports",
-}
-
 
 def normalize_segment(val: str) -> str:
     if pd.isna(val):
         return "Other"
-    # Strip apostrophes so "SUV'S" and "SUV’S" normalize cleanly to "SUVs"
-    key = str(val).strip().upper().replace("'", "").replace("’", "").replace("´", "")
-    return SEGMENT_MAP.get(key, str(val).strip().title())
+    key = (
+        str(val)
+        .strip()
+        .upper()
+        .replace("'", "")
+        .replace("’", "")
+        .replace("´", "")
+        .replace("`", "")
+    )
+    if "SUV" in key or "CAMIONES LIGEROS" in key:
+        return "SUVs"
+    if "PICK" in key:
+        return "Pickups"
+    if "SUBCOMPACT" in key:
+        return "Subcompacts"
+    if "COMPACT" in key:
+        return "Compacts"
+    if "MINIVAN" in key:
+        return "Minivans"
+    if "LUJO" in key:
+        return "Luxury"
+    if "DEPORTIV" in key:
+        return "Sports"
+    return str(val).strip().title()
 
 
 def is_usa(val: str) -> bool:
@@ -445,7 +446,7 @@ ex = ex_full[ex_full["MES"] <= max_month_latest].copy() if ytd_mode else ex_full
 
 
 # ==============================================================================
-# 4. CORE METRICS COMPUTATION
+# 4. CORE METRICS COMPUTATION (100% Data-Driven)
 # ==============================================================================
 def fmt_units(val: float) -> str:
     if abs(val) >= 1_000_000:
@@ -463,9 +464,6 @@ prod_curr = ps.loc[ps["ANIO"] == max_year, "PRODUCCION"].sum()
 prod_prev = ps.loc[ps["ANIO"] == prev_year, "PRODUCCION"].sum()
 prod_yoy = pct_delta(prod_curr, prod_prev)
 
-suv_curr = ps.loc[(ps["ANIO"] == max_year) & (ps["SEG_CLEAN"] == "SUVs"), "PRODUCCION"].sum()
-suv_mix = (suv_curr / prod_curr * 100.0) if prod_curr > 0 else 0.0
-
 us_curr = ex.loc[(ex["ANIO"] == max_year) & (ex["IS_USA"]), "EXPORTACION"].sum()
 us_prev = ex.loc[(ex["ANIO"] == prev_year) & (ex["IS_USA"]), "EXPORTACION"].sum()
 us_yoy = pct_delta(us_curr, us_prev)
@@ -477,13 +475,32 @@ non_us_yoy = pct_delta(non_us_curr, non_us_prev)
 tot_exp_curr = us_curr + non_us_curr
 us_dep_pct = (us_curr / tot_exp_curr * 100.0) if tot_exp_curr > 0 else 0.0
 
+# SUV metrics (with automatic fallback to leading segment only if user filters out SUVs)
+suv_curr = ps.loc[(ps["ANIO"] == max_year) & (ps["SEG_CLEAN"] == "SUVs"), "PRODUCCION"].sum()
 suv_exp_curr = ex.loc[(ex["ANIO"] == max_year) & (ex["SEG_CLEAN"] == "SUVs"), "EXPORTACION"].sum()
 suv_sales_curr = ps.loc[(ps["ANIO"] == max_year) & (ps["SEG_CLEAN"] == "SUVs"), "VENTAS"].sum()
-suv_exp_share = (
-    (suv_exp_curr / (suv_exp_curr + suv_sales_curr) * 100.0)
-    if (suv_exp_curr + suv_sales_curr) > 0
-    else 0.0
-)
+
+if suv_curr > 0:
+    focus_seg_name = "SUVs"
+    focus_seg_mix = (suv_curr / prod_curr * 100.0) if prod_curr > 0 else 0.0
+    focus_seg_exp_share = (
+        (suv_exp_curr / (suv_exp_curr + suv_sales_curr) * 100.0)
+        if (suv_exp_curr + suv_sales_curr) > 0
+        else 0.0
+    )
+else:
+    seg_rank_curr = (
+        ps[ps["ANIO"] == max_year]
+        .groupby("SEG_CLEAN", as_index=False)["PRODUCCION"]
+        .sum()
+        .sort_values("PRODUCCION", ascending=False)
+    )
+    focus_seg_name = seg_rank_curr.iloc[0]["SEG_CLEAN"] if not seg_rank_curr.empty else "Top Segment"
+    focus_prod_val = seg_rank_curr.iloc[0]["PRODUCCION"] if not seg_rank_curr.empty else 0.0
+    focus_seg_mix = (focus_prod_val / prod_curr * 100.0) if prod_curr > 0 else 0.0
+    f_exp = ex.loc[(ex["ANIO"] == max_year) & (ex["SEG_CLEAN"] == focus_seg_name), "EXPORTACION"].sum()
+    f_sal = ps.loc[(ps["ANIO"] == max_year) & (ps["SEG_CLEAN"] == focus_seg_name), "VENTAS"].sum()
+    focus_seg_exp_share = (f_exp / (f_exp + f_sal) * 100.0) if (f_exp + f_sal) > 0 else 0.0
 
 sub_sales_curr = ps.loc[(ps["ANIO"] == max_year) & (ps["SEG_CLEAN"] == "Subcompacts"), "VENTAS"].sum()
 sub_exp_curr = ex.loc[(ex["ANIO"] == max_year) & (ex["SEG_CLEAN"] == "Subcompacts"), "EXPORTACION"].sum()
@@ -497,7 +514,7 @@ period_tag = f"Jan–Oct {max_year} YTD" if ytd_mode else f"Full Year {max_year}
 
 
 # ==============================================================================
-# 5. SINGLE INTEGRATED HERO HEADER (Eliminates Duplicate KPI Row)
+# 5. SINGLE INTEGRATED HERO HEADER (Secretaría de Economía Institutional Theme)
 # ==============================================================================
 st.markdown(
     f"""
@@ -522,9 +539,9 @@ st.markdown(
                 <div class="hero-kpi-sub">{non_us_yoy:+.1f}% YoY shock absorber</div>
             </div>
             <div class="hero-kpi-box">
-                <div class="hero-kpi-label">SUV Assembly Share</div>
-                <div class="hero-kpi-val">{suv_mix:.1f}%</div>
-                <div class="hero-kpi-sub">{suv_exp_share:.1f}% of SUVs exported abroad</div>
+                <div class="hero-kpi-label">{focus_seg_name} Assembly Share</div>
+                <div class="hero-kpi-val">{focus_seg_mix:.1f}%</div>
+                <div class="hero-kpi-sub">{focus_seg_exp_share:.1f}% of {focus_seg_name} exported abroad</div>
             </div>
         </div>
     </div>
@@ -546,12 +563,12 @@ tab1, tab2, tab3, tab4, tab5 = st.tabs(
     ]
 )
 
-# Shared segment palette (high contrast + consistent across charts)
+# Shared segment palette (Secretaría de Economía institutional tones with clear separation)
 SEG_PALETTE = {
     "SUVs": SE_GUINDA,
-    "Pickups": SE_TEAL,
-    "Compacts": SE_AMBER,
-    "Subcompacts": SE_BLUE,
+    "Pickups": SE_VERDE,
+    "Compacts": SE_DORADO,
+    "Subcompacts": SE_OXFORD,
     "Other": "#94A3B8",
 }
 
@@ -593,7 +610,7 @@ with tab1:
         )
         cat_styles = [
             ("Historical (2015–2024)", "#CBD5E1"),
-            (f"{prev_year} Benchmark", SE_TEAL),
+            (f"{prev_year} Benchmark", SE_VERDE),
             (f"{max_year} Tariff Pullback", SE_GUINDA),
         ]
         fig_ann = go.Figure()
@@ -742,7 +759,7 @@ with tab1:
 
             fig_seg_yoy = go.Figure()
             for dir_label, dir_col, mask in [
-                ("YoY Expansion (>0%)", SE_TEAL, seg_yoy_df["YOY"] >= 0),
+                ("YoY Expansion (>0%)", SE_VERDE, seg_yoy_df["YOY"] >= 0),
                 ("YoY Contraction (<0%)", SE_GUINDA, seg_yoy_df["YOY"] < 0),
             ]:
                 sub_y = seg_yoy_df[mask]
@@ -763,10 +780,10 @@ with tab1:
             fig_seg_yoy.add_vline(
                 x=prod_yoy,
                 line_dash="dash",
-                line_color=SE_AMBER,
+                line_color=SE_DORADO,
                 annotation_text=f"Total {prod_yoy:+.1f}%",
                 annotation_position="top",
-                annotation_font=dict(size=10, color=SE_AMBER),
+                annotation_font=dict(size=10, color=SE_DORADO),
             )
             min_x = min(seg_yoy_df["YOY"].min(), prod_yoy)
             max_x = max(seg_yoy_df["YOY"].max(), 0)
@@ -853,7 +870,7 @@ with tab2:
     st.markdown(
         f"""
         <div class="sec-header">
-            <span class="sec-badge">02</span>
+            <span class="sec-badge" style="background-color:{SE_VERDE};">02</span>
             <h2 class="sec-title">Trade Divergence &amp; Automaker Tariff Exposure</h2>
         </div>
         <div class="sec-caption">U.S. shipments contracted while Latin America and Europe absorbed assembly capacity.</div>
@@ -879,7 +896,7 @@ with tab2:
         exp_trend["DEST"] = np.where(exp_trend["IS_USA"], "United States", "Non-U.S. Markets")
 
         fig_trade = go.Figure()
-        for dest_label, line_col in [("United States", SE_GUINDA), ("Non-U.S. Markets", SE_TEAL)]:
+        for dest_label, line_col in [("United States", SE_GUINDA), ("Non-U.S. Markets", SE_VERDE)]:
             d_sub = exp_trend[exp_trend["DEST"] == dest_label].sort_values("ANIO")
             fig_trade.add_trace(
                 go.Scatter(
@@ -949,7 +966,7 @@ with tab2:
                     x=top_dest["EXPORTACION"],
                     y=top_dest["PAIS_DESTINO"],
                     orientation="h",
-                    marker_color=SE_TEAL,
+                    marker_color=SE_VERDE,
                     text=top_dest["LABEL"],
                     textposition="outside",
                     textfont=dict(size=10, color=SE_TEXT),
@@ -1008,7 +1025,7 @@ with tab2:
     fig_quad = go.Figure()
     for grp_label, grp_col, grp_mask in [
         (f"High U.S. Exposure (≥{avg_us_share:.1f}%)", SE_GUINDA, oem_mat["US_SHARE"] >= avg_us_share),
-        (f"More Diversified (<{avg_us_share:.1f}%)", SE_TEAL, oem_mat["US_SHARE"] < avg_us_share),
+        (f"More Diversified (<{avg_us_share:.1f}%)", SE_VERDE, oem_mat["US_SHARE"] < avg_us_share),
     ]:
         sub_q = oem_mat[grp_mask]
         if not sub_q.empty:
@@ -1024,7 +1041,7 @@ with tab2:
                     marker=dict(
                         size=np.clip(np.sqrt(sub_q["PRODUCCION"].clip(lower=1000)) / 18.0, 14, 52),
                         color=grp_col,
-                        opacity=0.85,
+                        opacity=0.86,
                         line=dict(width=1.5, color="white"),
                     ),
                     customdata=np.stack([sub_q["US_EXP"], sub_q["NON_US_EXP"]], axis=-1),
@@ -1039,10 +1056,10 @@ with tab2:
     fig_quad.add_hline(
         y=avg_us_share,
         line_dash="dash",
-        line_color=SE_AMBER,
+        line_color=SE_DORADO,
         annotation_text=f"Industry U.S. Share ({avg_us_share:.1f}%)",
         annotation_position="bottom right",
-        annotation_font=dict(size=10, color=SE_AMBER),
+        annotation_font=dict(size=10, color=SE_DORADO),
     )
     fig_quad.update_layout(
         height=360,
@@ -1063,7 +1080,7 @@ with tab3:
     st.markdown(
         f"""
         <div class="sec-header">
-            <span class="sec-badge">03</span>
+            <span class="sec-badge" style="background-color:{SE_DORADO};">03</span>
             <h2 class="sec-title">Two-Speed Segment Split &amp; Automaker Peer Benchmark</h2>
         </div>
         <div class="sec-caption">Export-reliant SUVs vs. domestically absorbed Subcompacts, plus brand ranking dynamics.</div>
@@ -1110,7 +1127,7 @@ with tab3:
                 x=seg_split["DOM_PCT"],
                 name="Domestic Retail (Mexico)",
                 orientation="h",
-                marker_color=SE_TEAL,
+                marker_color=SE_VERDE,
                 text=[f"{v:.1f}%" if v >= 12 else "" for v in seg_split["DOM_PCT"]],
                 textposition="inside",
                 textfont=dict(color="white", size=10),
@@ -1161,7 +1178,7 @@ with tab3:
         )
         bump_df["RANK"] = bump_df.groupby("ANIO")["PRODUCCION"].rank(ascending=False, method="min")
 
-        bump_palette = [SE_GUINDA, SE_TEAL, SE_AMBER, SE_BLUE, "#8B5CF6", "#EC4899", "#475569"]
+        bump_palette = [SE_GUINDA, SE_VERDE, SE_DORADO, SE_OXFORD, "#7C3AED", "#B45309", "#475569"]
         fig_bump = go.Figure()
         for idx, brand in enumerate(top_oems):
             b_sub = bump_df[bump_df["MARCA"] == brand].sort_values("ANIO")
@@ -1225,7 +1242,7 @@ with tab3:
             .sum()
         )
         fig_hh = go.Figure()
-        for brand_name, col_hex, txt_pos in [(oem_a, SE_GUINDA, "top center"), (oem_b, SE_TEAL, "bottom center")]:
+        for brand_name, col_hex, txt_pos in [(oem_a, SE_GUINDA, "top center"), (oem_b, SE_VERDE, "bottom center")]:
             sub_h = hh_hist[hh_hist["MARCA"] == brand_name].sort_values("ANIO")
             fig_hh.add_trace(
                 go.Scatter(
@@ -1308,9 +1325,9 @@ with tab4:
                     y=y_years,
                     colorscale=[
                         [0.0, "#F8FAFC"],
-                        [0.35, "#99F6E4"],
-                        [0.70, SE_TEAL],
-                        [1.0, SE_GUINDA_DARK],
+                        [0.35, "#EBD8B0"],
+                        [0.70, SE_DORADO],
+                        [1.0, SE_GUINDA],
                     ],
                     hovertemplate="<b>%{y} · %{x}</b><br>Assembly: %{z:,.0f} units<extra></extra>",
                     colorbar=dict(title="Units", thickness=12, tickformat=".2s"),
@@ -1351,7 +1368,7 @@ with tab4:
         )
 
         fig_cum = go.Figure()
-        for yr, col_c, w_c in [(max_year, SE_GUINDA, 3.2), (prev_year, SE_TEAL, 2.8)]:
+        for yr, col_c, w_c in [(max_year, SE_GUINDA, 3.2), (prev_year, SE_VERDE, 2.8)]:
             sub_c = cum_df[cum_df["ANIO"] == yr]
             if not sub_c.empty:
                 fig_cum.add_trace(
@@ -1372,8 +1389,8 @@ with tab4:
                     y=avg_hist["CUM_PROD"],
                     mode="lines+markers",
                     name=f"2022–{prev_year} Avg",
-                    line=dict(color=SE_AMBER, width=2.2, dash="dot"),
-                    marker=dict(size=5, color=SE_AMBER),
+                    line=dict(color=SE_DORADO, width=2.2, dash="dot"),
+                    marker=dict(size=5, color=SE_DORADO),
                     hovertemplate=f"<b>2022–{prev_year} Avg (%{{x}} YTD)</b><br>Cumulative: %{{y:,.0f}} units<extra></extra>",
                 )
             )
@@ -1396,7 +1413,7 @@ with tab5:
     st.markdown(
         f"""
         <div class="sec-header">
-            <span class="sec-badge">05</span>
+            <span class="sec-badge" style="background-color:{SE_VERDE};">05</span>
             <h2 class="sec-title">Tariff Waterfall Simulator &amp; Policy Levers</h2>
         </div>
         <div class="sec-caption">Stress-test U.S. tariff contraction against non-U.S. diversification and domestic incentives.</div>
@@ -1469,18 +1486,17 @@ with tab5:
                     textposition="outside",
                     textfont=dict(size=10, color=SE_TEXT),
                     connector={"line": {"color": "#CBD5E1", "width": 1.5}},
-                    increasing={"marker": {"color": SE_TEAL}},
+                    increasing={"marker": {"color": SE_VERDE}},
                     decreasing={"marker": {"color": SE_GUINDA}},
-                    totals={"marker": {"color": SE_AMBER}},
+                    totals={"marker": {"color": SE_DORADO}},
                     showlegend=False,
                 )
             ]
         )
-        # Explicit legend markers for Waterfall color coding
         for wf_lbl, wf_col in [
-            ("Baseline / Projected Total", SE_AMBER),
+            ("Baseline / Projected Total", SE_DORADO),
             ("Negative Tariff Shock", SE_GUINDA),
-            ("Positive Diversification / Stimulus", SE_TEAL),
+            ("Positive Diversification / Stimulus", SE_VERDE),
         ]:
             fig_wf.add_trace(
                 go.Scatter(
@@ -1521,8 +1537,8 @@ with tab5:
                         <div class="rec-stat-lbl">U.S.-bound units</div>
                     </div>
                     <div class="rec-stat-box">
-                        <div class="rec-stat-num">{suv_exp_share:.1f}%</div>
-                        <div class="rec-stat-lbl">SUVs exported abroad</div>
+                        <div class="rec-stat-num">{focus_seg_exp_share:.1f}%</div>
+                        <div class="rec-stat-lbl">{focus_seg_name} exported abroad</div>
                     </div>
                 </div>
                 <div class="rec-action"><strong>Action:</strong> Accelerate Tier-1/Tier-2 North American powertrain &amp; battery localization in SUV plants to preserve zero-tariff USMCA qualification.</div>
@@ -1556,8 +1572,8 @@ with tab5:
     with r3:
         st.markdown(
             f"""
-            <div class="rec-card" style="border-top-color:{SE_AMBER};">
-                <span class="rec-tag amber">03 · Domestic Anchor</span>
+            <div class="rec-card" style="border-top-color:{SE_DORADO};">
+                <span class="rec-tag dorado">03 · Domestic Anchor</span>
                 <div class="rec-title">Strengthen Local Fleet Renewal</div>
                 <div class="rec-stats">
                     <div class="rec-stat-box">
